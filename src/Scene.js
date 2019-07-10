@@ -1,5 +1,5 @@
 import Camera from './Camera'
-import WebGL from './webGL'
+import WebGL from './WebGL'
 
 export default class Scene {
   constructor() {
