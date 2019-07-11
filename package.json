@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "css-loader": "^3.0.0",
+    "fpsmeter": "^0.3.1",
     "gl-matrix": "^3.0.0",
     "glsl-shader-loader": "^0.1.6",
     "style-loader": "^0.23.1"

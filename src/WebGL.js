@@ -1,13 +1,28 @@
 import v from './shaders/master.vert'
 import f from './shaders/master.frag'
 
+import * as glMatrix from 'gl-matrix'
+
+import m4 from './utils/m4'
+
+import FpsMeter from 'fpsmeter'
+
 export default class WebGL {
   constructor({ camera }) {
     this.camera = camera
 
+    this.time = 0
+
     this.canvas = document.createElement('canvas')
     this.canvas.height = window.innerHeight * 2
     this.canvas.width = window.innerWidth * 2
+
+    this.meter = new FPSMeter({
+      heat: 2,
+      graph: 1,
+      history: 20,
+      theme: 'colorful'
+    })
 
     this.canvas.style.height = window.innerHeight + 'px'
     this.canvas.style.width = window.innerWidth + 'px'
@@ -24,6 +39,7 @@ export default class WebGL {
     this.positionAttribLoc = this.gl.getAttribLocation(this.program, 'a_position')
 
     this.reverseMatrixUniformLoc = this.gl.getUniformLocation(this.program, 'u_inverseProjectionMatrix')
+    this.reverseModelUniformLoc = this.gl.getUniformLocation(this.program, 'u_modelInverse')
 
     this.circlePositionsUniformsLoc = [
       this.gl.getUniformLocation(this.program, 'u_circle1Position'),
@@ -94,16 +110,30 @@ export default class WebGL {
   }
 
   render() {
-    this.gl.uniform3f(this.circlePositionsUniformsLoc[0], 0.4, 0.4, -5)
-    this.gl.uniform3f(this.circleColorsUniformsLoc[0], 0, 0, 1)
+    this.meter.tick()
 
-    this.gl.uniform3f(this.circlePositionsUniformsLoc[1], -2, 0.2, -6)
-    this.gl.uniform3f(this.circleColorsUniformsLoc[1], 1, 0, 0)
+    this.time++
+    this.gl.uniform3f(this.circlePositionsUniformsLoc[0], 0.4, 0.4 + Math.cos(this.time / 30), -1)
+    this.gl.uniform3f(this.circleColorsUniformsLoc[0], 0.3, 0.3, 1)
 
-    this.gl.uniform3f(this.circlePositionsUniformsLoc[2], -0.5, 1, -4)
-    this.gl.uniform3f(this.circleColorsUniformsLoc[2], 0, 1, 0)
+    this.gl.uniform3f(this.circlePositionsUniformsLoc[1], -2, 0.2, 0)
+    this.gl.uniform3f(this.circleColorsUniformsLoc[1], 1, 0.3, 0.3)
+
+    this.gl.uniform3f(this.circlePositionsUniformsLoc[2], -0.5, 1, 1)
+    this.gl.uniform3f(this.circleColorsUniformsLoc[2], 0.3, 1, 0.3)
 
     this.gl.uniformMatrix4fv(this.reverseMatrixUniformLoc, false, this.camera.inverseProjection)
+
+    let rotation = m4.rotateY(this.time / 60)
+    this.gl.uniformMatrix4fv(
+      this.reverseModelUniformLoc,
+      false,
+      m4.inverse(m4.transpose(m4.lookAt([Math.cos(this.time / 120) * 5, 0, -5 * Math.sin(this.time / 120)], [0, 0, 0], [0, 1, 0])))
+    )
+    //console.log(this.camera.model)
+
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 6)
+
+    requestAnimationFrame(this.render.bind(this))
   }
 }
